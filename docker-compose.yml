@@ -4,9 +4,11 @@ services:
     image: traefik:v2.5
     command:
       - "--api.insecure=true"
+      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.traefik.address=:8090"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=meempharm22@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
@@ -18,9 +20,11 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./letsencrypt:/letsencrypt"
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`proxy.babbexx22.chickenkiller.com`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.services.api.loadbalancer.server.port=8090"
       - "traefik.http.routers.api.tls.certresolver=myresolver"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
@@ -29,7 +33,7 @@ services:
       - "traefik.http.routers.www-to-non-www.rule=Host(`www.babbexx22.chickenkiller.com`)"
       - "traefik.http.routers.www-to-non-www.entrypoints=websecure"
       - "traefik.http.routers.www-to-non-www.tls.certresolver=myresolver"
-      - "traefik.http.middlewares.www-to-non-www.redirectregex.regex=^https://www.(.*)"
+      - "traefik.http.middlewares.www-to-non-www.redirectregex.regex=^https://www\\.(.*)"
       - "traefik.http.middlewares.www-to-non-www.redirectregex.replacement=https://$1"
       - "traefik.http.middlewares.www-to-non-www.redirectregex.permanent=true"
       - "traefik.http.routers.www-to-non-www.middlewares=www-to-non-www@docker"
