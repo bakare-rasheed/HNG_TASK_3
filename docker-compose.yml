@@ -1,0 +1,89 @@
+services:
+
+  traefik:
+    image: traefik:v2.5
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=meempharm22@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8090:8090"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    labels:
+      - "traefik.http.routers.api.rule=Host(`proxy.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.routers.www-to-non-www.rule=Host(`www.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.www-to-non-www.entrypoints=websecure"
+      - "traefik.http.routers.www-to-non-www.tls.certresolver=myresolver"
+      - "traefik.http.middlewares.www-to-non-www.redirectregex.regex=^https://www.(.*)"
+      - "traefik.http.middlewares.www-to-non-www.redirectregex.replacement=https://$1"
+      - "traefik.http.middlewares.www-to-non-www.redirectregex.permanent=true"
+      - "traefik.http.routers.www-to-non-www.middlewares=www-to-non-www@docker"
+
+  frontend:
+    build: ./frontend
+    env_file:
+      - frontend/.env
+    ports:
+      - "3000:80"
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    # environment:
+    #   POSTGRES_USER: app
+    #   POSTGRES_PASSWORD: changethis123
+    #   POSTGRES_SERVER: db
+    #   POSTGRES_PORT: 5432
+    #   POSTGRES_DB: app
+    env_file:
+      - backend/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`babbexx22.chickenkiller.com`) && PathPrefix(`/api`, `/docs`, `/redoc`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+
+  db:
+    image: postgres:13
+    env_file:
+      - backend/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    labels:
+      - "traefik.http.routers.adminer.rule=Host(`db.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=myresolver"
+
+volumes:
+  postgres_data:
