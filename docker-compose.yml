@@ -21,7 +21,7 @@ services:
       - "./letsencrypt:/letsencrypt"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`proxy.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.api.rule=Host(`proxy.ayolo.chickenkiller.com`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.services.api.loadbalancer.server.port=8090"
@@ -30,7 +30,7 @@ services:
       - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
       - "traefik.http.routers.http-catchall.entrypoints=web"
       - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
-      - "traefik.http.routers.www-to-non-www.rule=Host(`www.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.www-to-non-www.rule=Host(`www.ayolo.chickenkiller.com`)"
       - "traefik.http.routers.www-to-non-www.entrypoints=websecure"
       - "traefik.http.routers.www-to-non-www.tls.certresolver=myresolver"
       - "traefik.http.middlewares.www-to-non-www.redirectregex.regex=^https://www\\.(.*)"
@@ -45,7 +45,7 @@ services:
     ports:
       - "3000:80"
     labels:
-      - "traefik.http.routers.frontend.rule=Host(`babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.frontend.rule=Host(`ayolo.chickenkiller.com`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
 
@@ -65,7 +65,7 @@ services:
       - backend/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`babbexx22.chickenkiller.com`) && PathPrefix(`/api`, `/docs`, `/redoc`)"
+      - "traefik.http.routers.backend.rule=Host(`ayolo.chickenkiller.com`) && PathPrefix(`/api`, `/docs`, `/redoc`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
 
@@ -85,7 +85,7 @@ services:
     ports:
       - "8080:8080"
     labels:
-      - "traefik.http.routers.adminer.rule=Host(`db.babbexx22.chickenkiller.com`)"
+      - "traefik.http.routers.adminer.rule=Host(`db.ayolo.chickenkiller.com`)"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=myresolver"
 
